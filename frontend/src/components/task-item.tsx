@@ -1,0 +1,174 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+// Ícones
+import {
+  Calendar,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+
+// Componentes de UI (Shadcn)
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// O Modal de Edição (Certifique-se que o arquivo edit-atividade-dialog.tsx existe na mesma pasta)
+import { EditAtividadeDialog } from "./edit-atividade-dialog";
+
+interface TaskProps {
+  id: string;
+  titulo: string;
+  concluido: boolean;
+  dataEntrega: string | null;
+  observacao: string | null;
+}
+
+export function TaskItem({
+  id,
+  titulo,
+  concluido,
+  dataEntrega,
+  observacao,
+}: TaskProps) {
+  const router = useRouter();
+
+  // Estados Locais
+  const [isDone, setIsDone] = useState(concluido);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false); // Controla se o modal de edição está aberto
+
+  // Função para marcar/desmarcar (Checkbox)
+  async function handleToggle(checked: boolean) {
+    setIsDone(checked); // Atualiza visualmente na hora
+    setIsLoading(true);
+
+    try {
+      // O 'checked' do Radix UI pode vir como 'indeterminate', forçamos boolean
+      const statusFinal = checked === true;
+
+      await fetch(`http://localhost:3333/atividades/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ concluido: statusFinal }),
+      });
+
+      router.refresh();
+    } catch (error) {
+      console.error("Erro ao atualizar checkbox", error);
+      setIsDone(!checked); // Reverte em caso de erro
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // Função para Deletar a tarefa
+  async function handleDelete() {
+    if (!confirm("Tem certeza que deseja apagar esta tarefa?")) return;
+
+    try {
+      await fetch(`http://localhost:3333/atividades/${id}`, {
+        method: "DELETE",
+      });
+      router.refresh();
+    } catch (error) {
+      console.error("Erro ao deletar", error);
+      alert("Erro ao deletar tarefa.");
+    }
+  }
+
+  // Cálculos de Data para exibição
+  const dataFormatada = dataEntrega
+    ? new Date(dataEntrega).toLocaleDateString("pt-BR")
+    : null;
+  const isAtrasado =
+    !isDone && dataEntrega && new Date(dataEntrega) < new Date();
+
+  return (
+    <>
+      <div className="flex items-center justify-between p-4 gap-3 hover:bg-accent/30 transition-colors rounded-lg border border-transparent hover:border-border">
+        {/* LADO ESQUERDO: Checkbox e Textos */}
+        <div className="flex items-center gap-3 flex-1 overflow-hidden">
+          <div className="relative flex items-center justify-center w-5 h-5">
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : (
+              <Checkbox
+                checked={isDone}
+                // O onCheckedChange do Shadcn retorna boolean | 'indeterminate'
+                onCheckedChange={(checked) => handleToggle(checked === true)}
+                className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+              />
+            )}
+          </div>
+
+          <div className="flex-1 truncate">
+            <p
+              className={`font-medium transition-all truncate ${isDone ? "line-through text-muted-foreground" : ""}`}
+            >
+              {titulo}
+            </p>
+
+            {/* Se tiver observação, mostra em itálico pequeno */}
+            {observacao && (
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                📝 {observacao}
+              </p>
+            )}
+
+            {dataFormatada && (
+              <p
+                className={`text-xs flex items-center gap-1 mt-2 ${isAtrasado ? "text-red-500 font-bold" : "text-muted-foreground"}`}
+              >
+                <Calendar className="h-3 w-3" />
+                {dataFormatada}
+                {isAtrasado && " (Atrasado)"}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* LADO DIREITO: Menu Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+              <span className="sr-only">Abrir menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
+              <Pencil className="mr-2 h-4 w-4" /> Editar
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={handleDelete}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Excluir
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* MODAL DE EDIÇÃO (Renderizado fora do layout do card, mas controlado por estado) */}
+      <EditAtividadeDialog
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        atividade={{ id, titulo, dataEntrega, observacao }}
+      />
+    </>
+  );
+}

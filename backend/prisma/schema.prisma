@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. O Semestre Letivo
+model Periodo {
+  id        String   @id @default(uuid())
+  codigo    String   // Ex: "2026.1"
+  semestre  Int      // Ex: 2 (para o 2º período do curso)
+  
+  materias  Materia[] // Relação: Um período tem várias matérias
+
+  criadoEm  DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+  
+  @@map("periodos") // Nome da tabela no banco (plural/minúsculo é boa prática)
+}
+
+// 2. As Disciplinas
+model Materia {
+  id        String  @id @default(uuid())
+  nome      String  // Ex: "Cálculo II"
+  cor       String  @default("#3b82f6") // Para o frontend (ex: cards coloridos)
+
+  professorNome String? // O "?" significa que pode ser nulo (opcional)
+  professorEmail String? // O "?" significa que pode ser nulo (opcional)
+
+  periodoId String
+  periodo   Periodo @relation(fields: [periodoId], references: [id])
+
+  notas      Nota[]
+  atividades Atividade[]
+
+  @@map("materias")
+}
+
+// 3. As Notas (Avaliações Formais - AB1, AB2)
+model Nota {
+  id          String  @id @default(uuid())
+  nome        String  // Ex: "AB1", "Prova Final"
+  valor       Float?  // Pode ser nulo se você ainda não recebeu a nota
+  notaMaxima  Float   @default(10.0) // Quanto vale a prova (ex: 10 ou 100)
+  
+  materiaId   String
+  materia     Materia @relation(fields: [materiaId], references: [id], onDelete: Cascade)
+
+  @@map("notas")
+}
+
+// 4. As Tarefas (Tasks/Kanban)
+model Atividade {
+  id          String   @id @default(uuid())
+  titulo      String   // Ex: "Lista de Exercícios 04"
+  concluido   Boolean  @default(false)
+  dataEntrega DateTime? // Opcional, nem tudo tem deadline
+  observacao  String?
+
+  materiaId   String
+  materia     Materia  @relation(fields: [materiaId], references: [id], onDelete: Cascade)
+
+  @@map("atividades")
+}
