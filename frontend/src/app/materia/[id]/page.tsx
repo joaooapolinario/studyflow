@@ -20,6 +20,7 @@ interface MateriaDetalhada {
   professorNome: string;
   professorEmail: string | null;
   cor: string;
+  horarios: any[];
   notas: {
     id: string;
     nome: string;

@@ -10,15 +10,45 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Plus, BookOpen, Calendar, AlertCircle } from "lucide-react";
-import { Materia } from "@/types";
+
 import { CreateMateriaDialog } from "@/components/create-materia-dialog";
 import Link from "next/link";
 import { calcularEstatisticas } from "@/lib/calculations";
-import { Clock } from "lucide-react"; // Ícone de relógio
-// Função para buscar dados (roda no Servidor do Next.js, não no navegador do usuário)
+import { Clock } from "lucide-react"; 
+import { ScheduleDialog } from "@/components/schedule-diaog";
+
+interface Materia {
+  id: string
+  nome: string
+  cor: string | null
+  professorNome: string | null
+  professorContato: string | null
+  
+
+  horarios: {
+    id: string
+    diaSemana: number
+    inicio: string
+    fim: string
+    sala: string | null
+  }[]
+  
+  notas: {
+    id: string
+    nome: string
+    valor: number
+    notaMaxima: number
+  }[]
+  
+  atividades: {
+    id: string
+    concluido: boolean
+  }[]
+}
+
 async function getMaterias() {
   try {
-    // Chama o backend na porta 3333
+    
     const res = await fetch("http://localhost:3333/materias", {
       cache: "no-store", // Garante que sempre pegue dados frescos, não cache
     });
@@ -65,13 +95,9 @@ export default async function Home() {
           </p>
         </div>
 
-        {/* Só mostra o botão se tiver um período válido */}
-        {periodoAtual && (
-          //
-          <Button variant="outline" className="gap-2">
-            <Clock className="h-4 w-4" /> Meu Horário
-          </Button>
-        )}
+        <ScheduleDialog materias={materias} />
+
+
       </header>
 
       {/* Se não tiver matérias, mostra um aviso amigável */}

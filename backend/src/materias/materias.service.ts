@@ -20,7 +20,8 @@ export class MateriasService {
       include: {
         periodo: true,
         notas: true,
-        atividades: true
+        atividades: true,
+        horarios: true,
       }
     });
   }
@@ -32,7 +33,11 @@ export class MateriasService {
         notas: true,
         atividades: {
           orderBy: { dataEntrega: 'asc'}
+        },
+        horarios: {
+          orderBy: { diaSemana: 'asc'}
         }
+
       }
     });
   }

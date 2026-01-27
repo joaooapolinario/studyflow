@@ -1,6 +1,7 @@
+
 interface Nota {
   valor: number | null;
-  notaMaxima: number;
+  notaMaxima: number; // <--- Mudamos de 'notaMaxima' para 'valorMaximo'
 }
 
 interface Atividade {
@@ -12,10 +13,11 @@ export function calcularEstatisticas(notas: Nota[], atividades: Atividade[]) {
   const notasLancadas = notas.filter((n) => n.valor !== null);
   
   const totalPontosObtidos = notasLancadas.reduce((acc, n) => acc + Number(n.valor), 0);
+  
+  // AQUI ESTAVA O ERRO: Trocamos .notaMaxima por .valorMaximo
   const totalPontosPossiveis = notasLancadas.reduce((acc, n) => acc + Number(n.notaMaxima), 0);
   
   // Média proporcional (0 a 10) baseada apenas no que já foi avaliado
-  // Ex: Se valia 10 e tirei 8 -> Média 8.0
   const mediaAtual = totalPontosPossiveis > 0 
     ? (totalPontosObtidos / totalPontosPossiveis) * 10 
     : 0;

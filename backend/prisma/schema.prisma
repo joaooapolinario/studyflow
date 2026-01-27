@@ -35,6 +35,7 @@ model Materia {
 
   notas      Nota[]
   atividades Atividade[]
+  horarios   HorarioAula[]
 
   @@map("materias")
 }
@@ -64,4 +65,15 @@ model Atividade {
   materia     Materia  @relation(fields: [materiaId], references: [id], onDelete: Cascade)
 
   @@map("atividades")
+}
+
+model HorarioAula {
+  id        String  @id @default(uuid())
+  diaSemana Int     // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sáb
+  inicio    String  // "08:00"
+  fim       String  // "10:00"
+  sala      String? // "B-102"
+  
+  materiaId String
+  materia   Materia @relation(fields: [materiaId], references: [id], onDelete: Cascade)
 }
