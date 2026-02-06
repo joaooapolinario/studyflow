@@ -1,7 +1,9 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,108 +12,156 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Plus, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Plus } from 'lucide-react';
+import { toast, Toaster } from 'sonner';
 
-// Recebemos o ID do período atual como prop, pois a matéria precisa ser vinculada a ele
-interface Props {
-  periodoId: string,
-  className?: string
+interface CreateMateriaDialogProps {
+  periodoId: string;
+  className?: string;
 }
 
-export function CreateMateriaDialog({ periodoId, className}: Props) {
-  const [open, setOpen] = useState(false) // Controla se a janela está aberta
-  const [loading, setLoading] = useState(false) // Controla o estado de "Salvando..."
-  const router = useRouter() // Para recarregar a página após salvar
+export function CreateMateriaDialog({ periodoId, className }: CreateMateriaDialogProps) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    nome: '',
+    professorNome: '',
+    professorContato: '',
+    cor: '#3b82f6',
+  });
 
-  // Estados do formulário
-  const [nome, setNome] = useState("")
-  const [prof, setProf] = useState("")
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault() // Evita que a página recarregue sozinha
-    setLoading(true)
+    const token = Cookies.get('token');
+
+    if (!token) {
+      alert('Sessão expirada. Por favor, faça login novamente.');
+      router.push('/login');
+      return;
+    }
 
     try {
-      // Chama o Backend
-      const res = await fetch("http://localhost:3333/materias", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('http://localhost:3333/materias', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          nome,
-          professorNome: prof,
-          periodoId: periodoId,
-          cor: "#8b5cf6" // Roxo padrão por enquanto (depois podemos deixar escolher)
-        })
-      })
+          ...formData,
+          periodoId,
+        }),
+      });
 
-      if (res.ok) {
-        setOpen(false) // Fecha o modal
-        setNome("")    // Limpa o campo
-        setProf("")    // Limpa o campo
-        router.refresh() // <--- A Mágica: Atualiza a lista de matérias na tela sem F5
+      if (!res.ok) {
+        throw new Error('Erro ao criar matéria');
       }
+
+      setFormData({
+        nome: '',
+        professorNome: '',
+        professorContato: '',
+        cor: '#3b82f6',
+      });
+      setOpen(false);
+      toast.success('Matéria criada com sucesso!');
+      router.refresh(); 
+      
     } catch (error) {
-      console.error("Erro ao criar", error)
+      console.error(error);
+      toast.error('Erro ao criar matéria. Tente novamente.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className={`gap-2 ${className}`}>
-          <Plus className="h-4 w-4" /> 
-          <span className="button-text">Nova Matéria</span>
+        <Button className={className}>
+          <Plus className="h-6 w-6" />
+          <span className="sr-only button-text">Nova Matéria</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-106.25">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Nova Matéria</DialogTitle>
-            <DialogDescription>
-              Adicione uma disciplina ao seu período atual.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Nome
-              </Label>
+        <DialogHeader>
+          <DialogTitle>Nova Matéria</DialogTitle>
+          <DialogDescription>
+            Adicione uma nova disciplina ao seu semestre.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="nome" className="text-right">
+              Nome
+            </Label>
+            <Input
+              id="nome"
+              required
+              className="col-span-3"
+              placeholder="Ex: Cálculo I"
+              value={formData.nome}
+              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="professor" className="text-right">
+              Professor
+            </Label>
+            <Input
+              id="professor"
+              className="col-span-3"
+              placeholder="Nome do professor"
+              value={formData.professorNome}
+              onChange={(e) => setFormData({ ...formData, professorNome: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="contato" className="text-right">
+              Contato
+            </Label>
+            <Input
+              id="contato"
+              className="col-span-3"
+              placeholder="Email ou Sala"
+              value={formData.professorContato}
+              onChange={(e) => setFormData({ ...formData, professorContato: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="cor" className="text-right">
+              Cor
+            </Label>
+            <div className="col-span-3 flex items-center gap-2">
               <Input
-                id="name"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                placeholder="Ex: Arquitetura de Computadores"
-                className="col-span-3"
-                required
+                id="cor"
+                type="color"
+                className="w-12 h-10 p-1 cursor-pointer"
+                value={formData.cor}
+                onChange={(e) => setFormData({ ...formData, cor: e.target.value })}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="prof" className="text-right">
-                Professor
-              </Label>
-              <Input
-                id="prof"
-                value={prof}
-                onChange={(e) => setProf(e.target.value)}
-                placeholder="Ex: Linus Torvalds"
-                className="col-span-3"
-              />
+              <span className="text-sm text-muted-foreground">{formData.cor}</span>
             </div>
           </div>
+
           <DialogFooter>
             <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar Matéria
+              {loading ? 'Salvando...' : 'Salvar Matéria'}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

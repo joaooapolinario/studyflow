@@ -58,9 +58,8 @@ export function ManageSchedulesDialog({ open, onOpenChange, materiaId, horarios 
   const [fim, setFim] = useState("")
   const [sala, setSala] = useState("")
 
-  // Função 1: Adicionar Horário
   async function handleAdd() {
-    if (!dia || !inicio || !fim) return // Validação simples
+    if (!dia || !inicio || !fim) return
     setLoading(true)
 
     try {
@@ -69,14 +68,13 @@ export function ManageSchedulesDialog({ open, onOpenChange, materiaId, horarios 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           materiaId,
-          diaSemana: parseInt(dia), // O backend espera número
+          diaSemana: parseInt(dia),
           inicio,
           fim,
           sala
         })
       })
       
-      // Limpa o form e atualiza
       setInicio("")
       setFim("")
       setSala("")
@@ -88,9 +86,7 @@ export function ManageSchedulesDialog({ open, onOpenChange, materiaId, horarios 
     }
   }
 
-  // Função 2: Apagar Horário
   async function handleDelete(id: string) {
-    // Não precisa de loading global aqui para ser mais fluido, mas poderia por.
     try {
       await fetch(`http://localhost:3333/horarios/${id}`, {
         method: "DELETE",
@@ -112,7 +108,6 @@ export function ManageSchedulesDialog({ open, onOpenChange, materiaId, horarios 
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* 1. LISTA DE HORÁRIOS EXISTENTES */}
           <div className="border rounded-md">
             <Table>
               <TableHeader>
@@ -165,14 +160,14 @@ export function ManageSchedulesDialog({ open, onOpenChange, materiaId, horarios 
             </Table>
           </div>
 
-          {/* 2. FORMULÁRIO DE ADIÇÃO */}
+          
           <div className="bg-muted/40 p-4 rounded-lg space-y-3 border">
             <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
                 <Plus className="h-4 w-4" /> Novo Horário
             </h4>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {/* Select de Dias */}
+                
                 <div className="space-y-1">
                     <Label className="text-xs">Dia</Label>
                     <Select onValueChange={setDia} value={dia}>
@@ -189,7 +184,6 @@ export function ManageSchedulesDialog({ open, onOpenChange, materiaId, horarios 
                     </Select>
                 </div>
 
-                {/* Horas */}
                 <div className="space-y-1">
                     <Label className="text-xs">Início</Label>
                     <Input type="time" value={inicio} onChange={e => setInicio(e.target.value)} />
@@ -199,7 +193,6 @@ export function ManageSchedulesDialog({ open, onOpenChange, materiaId, horarios 
                     <Input type="time" value={fim} onChange={e => setFim(e.target.value)} />
                 </div>
 
-                {/* Sala */}
                 <div className="space-y-1">
                     <Label className="text-xs">Sala (Opcional)</Label>
                     <Input placeholder="Sala 1" value={sala} onChange={e => setSala(e.target.value)} />

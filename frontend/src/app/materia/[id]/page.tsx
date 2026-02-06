@@ -1,11 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cookies } from "next/headers";
+import { redirect, notFound } from "next/navigation";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, Mail, User, Calendar, CheckCircle2, Circle, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calendar, Plus } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { CreateAtividadeDialog } from "@/components/create-atividade-dialog";
 import { CreateNotaDialog } from "@/components/create-nota-dialog";
 import { TaskItem } from "@/components/task-item";
@@ -13,57 +17,57 @@ import { NotaItem } from "@/components/nota-item";
 import { calcularEstatisticas } from "@/lib/calculations";
 import { MateriaHeaderActions } from "@/components/materia-header-actions";
 
-// Interface dos dados
-interface MateriaDetalhada {
+interface Materia {
   id: string;
   nome: string;
-  professorNome: string;
-  professorEmail: string | null;
-  cor: string;
-  horarios: any[];
+  cor: string | null;
+  professorNome: string | null;
+  professorContato: string | null;
   notas: {
     id: string;
     nome: string;
-    valor: number | null;
+    valor: number;
     notaMaxima: number;
   }[];
   atividades: {
     id: string;
     titulo: string;
-    concluido: boolean;
-    dataEntrega: string;
     observacao: string | null;
+    dataEntrega: string | null;
+    concluido: boolean;
+    tipo: string;
   }[];
 }
 
-async function getMateria(id: string) {
+async function getMateria(id: string, token: string) {
   try {
     const res = await fetch(`http://localhost:3333/materias/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
-    if (!res.ok) return null;
-    return res.json();
+
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error("Erro ao buscar matéria");
+
+    return (await res.json()) as Materia;
   } catch (error) {
-    console.error("Erro ao buscar materia:", error);
+    console.error(error);
     return null;
   }
 }
 
-// CORREÇÃO AQUI: Definimos params como uma Promise
-type Props = {
-  params: Promise<{ id: string }>;
-};
+export default async function MateriaPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
 
-export default async function MateriaPage(props: Props) {
-  // 1. Desembrulhamos o params com await antes de usar
-  const params = await props.params;
-  const id = params.id;
+  if (!token) redirect("/login");
 
-  // 2. Agora buscamos a matéria usando o ID correto
-  const materia: MateriaDetalhada = await getMateria(id);
+  const materia = await getMateria(id, token);
 
   if (!materia) {
-    return notFound();
+    notFound();
   }
 
   const stats = calcularEstatisticas(materia.notas, materia.atividades);
@@ -77,7 +81,6 @@ export default async function MateriaPage(props: Props) {
           </Button>
         </Link>
 
-        {/* Título e Info central */}
         <div className="flex-1">
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
             <div
@@ -87,16 +90,14 @@ export default async function MateriaPage(props: Props) {
           </h1>
           <div className="flex flex-col text-muted-foreground">
             <span>{materia.professorNome || "Sem professor"}</span>
-            {/* Mostra contato se existir */}
-            {materia.professorEmail && (
+            {materia.professorContato && (
               <span className="text-xs text-blue-500">
-                {materia.professorEmail}
+                {materia.professorContato}
               </span>
             )}
           </div>
         </div>
 
-        {/* AQUI ENTRA O MENU DE AÇÕES */}
         <MateriaHeaderActions materia={materia} />
       </div>
 
@@ -115,7 +116,7 @@ export default async function MateriaPage(props: Props) {
           <Card>
             <CardContent className="p-0">
               {materia.atividades.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
+                <div className="text-muted-foreground italic">
                   Nenhuma tarefa pendente.
                 </div>
               ) : (
@@ -128,6 +129,7 @@ export default async function MateriaPage(props: Props) {
                       concluido={task.concluido}
                       dataEntrega={task.dataEntrega}
                       observacao={task.observacao}
+                      tipo={task.tipo}
                     />
                   ))}
                 </div>
@@ -165,7 +167,7 @@ export default async function MateriaPage(props: Props) {
                 )}
               </CardContent>
             </Card>
-            {/* Card de Análise de Notas */}
+            
             <Card className="bg-muted/50 border-dashed flex flex-col justify-center">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base text-center">
@@ -186,7 +188,6 @@ export default async function MateriaPage(props: Props) {
                         distribuídos
                       </p>
 
-                      {/* Feedback inteligente */}
                       <div className="mt-4 p-2 bg-background rounded border text-xs">
                         {stats.mediaAtual >= 7
                           ? "🚀 Você está na média! Continue assim."

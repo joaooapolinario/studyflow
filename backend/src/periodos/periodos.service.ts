@@ -5,38 +5,49 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class PeriodosService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-  async create(createPeriodoDto: CreatePeriodoDto) {
+  async create(createPeriodoDto: CreatePeriodoDto, userId: string) {
     return await this.prisma.periodo.create({
-      data: createPeriodoDto,
+      data: {
+        ...createPeriodoDto,
+        userId: userId,
+      },
     });
   }
-  
-  async findAll() {
+
+  async findAll(userId: string) {
     return await this.prisma.periodo.findMany({
-      orderBy: { semestre: 'asc' }
+      where: { userId: userId },
+      include: {
+        materias: {
+          include: {
+            notas: true,
+            atividades: true,
+            horarios: true,
+          }
+        }
+      }
     });
   }
 
   async findOne(id: string) {
     return await this.prisma.periodo.findUnique({
       where: { id },
-      include: {
-        materias: {
-          include: {
-            notas: true
-          }
-        }
-      }
+      include: { materias: true },
     });
   }
-  
-  update(id: number, updatePeriodoDto: UpdatePeriodoDto) {
-    return `This action updates a #${id} periodo`;
+
+  async update(id: string, updatePeriodoDto: UpdatePeriodoDto) {
+    return await this.prisma.periodo.update({
+      where: { id },
+      data: updatePeriodoDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} periodo`;
+  async remove(id: string) {
+    return await this.prisma.periodo.delete({
+      where: { id },
+    });
   }
 }

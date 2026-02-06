@@ -7,73 +7,70 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 1. O Semestre Letivo
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  nome      String
+  senha     String   // Será salva como Hash (criptografada)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  periodos  Periodo[] // Um usuário tem vários períodos
+}
+
 model Periodo {
   id        String   @id @default(uuid())
-  codigo    String   // Ex: "2026.1"
-  semestre  Int      // Ex: 2 (para o 2º período do curso)
+  codigo    String   // Ex: "2024.1"
+  semestre  Int      // Ex: 1, 2, 3...
   
-  materias  Materia[] // Relação: Um período tem várias matérias
+  // 2. RELACIONAMENTO COM USER
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  criadoEm  DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
-  
-  @@map("periodos") // Nome da tabela no banco (plural/minúsculo é boa prática)
+  materias  Materia[]
 }
 
-// 2. As Disciplinas
 model Materia {
-  id        String  @id @default(uuid())
-  nome      String  // Ex: "Cálculo II"
-  cor       String  @default("#3b82f6") // Para o frontend (ex: cards coloridos)
-
-  professorNome String? // O "?" significa que pode ser nulo (opcional)
-  professorEmail String? // O "?" significa que pode ser nulo (opcional)
-
-  periodoId String
-  periodo   Periodo @relation(fields: [periodoId], references: [id])
-
-  notas      Nota[]
-  atividades Atividade[]
-  horarios   HorarioAula[]
-
-  @@map("materias")
+  id               String        @id @default(uuid())
+  nome             String
+  cor              String?
+  professorNome    String?
+  professorContato String?
+  
+  periodoId        String
+  periodo          Periodo       @relation(fields: [periodoId], references: [id], onDelete: Cascade)
+  
+  notas            Nota[]
+  atividades       Atividade[]
+  horarios         HorarioAula[]
 }
 
-// 3. As Notas (Avaliações Formais - AB1, AB2)
 model Nota {
   id          String  @id @default(uuid())
-  nome        String  // Ex: "AB1", "Prova Final"
-  valor       Float?  // Pode ser nulo se você ainda não recebeu a nota
-  notaMaxima  Float   @default(10.0) // Quanto vale a prova (ex: 10 ou 100)
-  
+  nome        String
+  valor       Float?
+  notaMaxima Float   
   materiaId   String
   materia     Materia @relation(fields: [materiaId], references: [id], onDelete: Cascade)
-
-  @@map("notas")
 }
 
-// 4. As Tarefas (Tasks/Kanban)
 model Atividade {
-  id          String   @id @default(uuid())
-  titulo      String   // Ex: "Lista de Exercícios 04"
-  concluido   Boolean  @default(false)
-  dataEntrega DateTime? // Opcional, nem tudo tem deadline
+  id          String    @id @default(uuid())
+  titulo      String
+  concluido   Boolean   @default(false)
+  dataEntrega DateTime?
   observacao  String?
-
+  tipo        String
   materiaId   String
-  materia     Materia  @relation(fields: [materiaId], references: [id], onDelete: Cascade)
-
-  @@map("atividades")
+  materia     Materia   @relation(fields: [materiaId], references: [id], onDelete: Cascade)
 }
 
 model HorarioAula {
   id        String  @id @default(uuid())
-  diaSemana Int     // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sáb
-  inicio    String  // "08:00"
-  fim       String  // "10:00"
-  sala      String? // "B-102"
-  
+  diaSemana Int     
+  inicio    String  
+  fim       String  
+  sala      String? 
   materiaId String
   materia   Materia @relation(fields: [materiaId], references: [id], onDelete: Cascade)
 }

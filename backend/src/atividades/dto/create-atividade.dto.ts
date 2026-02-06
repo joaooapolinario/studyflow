@@ -1,9 +1,27 @@
+import { IsBoolean, IsDateString, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+
 export class CreateAtividadeDto {
-    titulo: string;
-    materiaId: string;
+  @IsNotEmpty()
+  @IsString()
+  titulo: string;
 
-    dataEntrega?: string;
+  @IsOptional()
+  @IsString()
+  observacao?: string;
 
-    concluido?: boolean;
-    observacao?: string;
+  @IsOptional()
+  @IsDateString()
+  dataEntrega?: string;
+
+  @IsNotEmpty()
+  @IsString()
+  tipo: string;
+
+  @IsOptional()
+  @IsBoolean()
+  concluido?: boolean;
+
+  @IsNotEmpty()
+  @IsUUID()
+  materiaId: string;
 }

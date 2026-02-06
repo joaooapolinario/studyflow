@@ -1,37 +1,36 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { CreateHorarioDto } from './dto/create-horario.dto';
-import { UpdateHorarioDto } from './dto/update-horario.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class HorariosService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createHorarioDto: CreateHorarioDto) {
+  async create(createHorarioDto: CreateHorarioDto, userId: string) {
+    const materia = await this.prisma.materia.findUnique({
+      where: { id: createHorarioDto.materiaId },
+      include: { periodo: true },
+    });
+
+    if (!materia || materia.periodo.userId !== userId) {
+      throw new UnauthorizedException('Acesso negado a esta matéria.');
+    }
+
     return await this.prisma.horarioAula.create({
-      data: {
-        diaSemana: Number(createHorarioDto.diaSemana),
-        inicio: createHorarioDto.inicio,
-        fim: createHorarioDto.fim,
-        sala: createHorarioDto.sala,
-        materiaId: createHorarioDto.materiaId,
-      },
+      data: createHorarioDto,
     });
   }
 
-  findAll() {
-    return `This action returns all horarios`;
-  }
+  async remove(id: string, userId: string) {
+    const horario = await this.prisma.horarioAula.findUnique({
+      where: { id },
+      include: { materia: { include: { periodo: true } } },
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} horario`;
-  }
+    if (!horario || horario.materia.periodo.userId !== userId) {
+      throw new NotFoundException('Horário não encontrado ou acesso negado.');
+    }
 
-  update(id: number, updateHorarioDto: UpdateHorarioDto) {
-    return `This action updates a #${id} horario`;
-  }
-
-  async remove(id: string) {
     return await this.prisma.horarioAula.delete({
       where: { id },
     });

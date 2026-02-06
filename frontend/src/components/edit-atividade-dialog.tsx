@@ -1,5 +1,5 @@
 "use client";
-
+import Cookies from "js-cookie";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Props {
   open: boolean;
@@ -24,6 +25,7 @@ interface Props {
     titulo: string;
     dataEntrega: string | null;
     observacao: string | null;
+    tipo: string;
   };
 }
 
@@ -31,15 +33,16 @@ export function EditAtividadeDialog({ open, onOpenChange, atividade }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // Estados iniciam com os valores atuais da tarefa
+ 
   const [titulo, setTitulo] = useState(atividade.titulo);
-  // Formata a data para o input (yyyy-MM-dd) se ela existir
+  
   const [data, setData] = useState(
     atividade.dataEntrega
       ? new Date(atividade.dataEntrega).toISOString().split("T")[0]
       : "",
   );
   const [obs, setObs] = useState(atividade.observacao || "");
+  const [tipo, setTipo] = useState(atividade.tipo);
 
   useEffect(() => {
     if (open) {
@@ -50,27 +53,34 @@ export function EditAtividadeDialog({ open, onOpenChange, atividade }: Props) {
           ? new Date(atividade.dataEntrega).toISOString().split("T")[0]
           : "",
       );
+      setTipo(atividade.tipo);
     }
   }, [open, atividade]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    
+    const token = Cookies.get('token');
+    if (!token) return;
 
     try {
       await fetch(`http://localhost:3333/atividades/${atividade.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           titulo,
-          // Truque do fuso horário novamente
           dataEntrega: data ? new Date(data + "T00:00:00").toISOString() : null,
           observacao: obs,
+          tipo
         }),
       });
 
       router.refresh();
-      onOpenChange(false); // Fecha o modal
+      onOpenChange(false);
     } catch (error) {
       console.error("Erro ao editar", error);
     } finally {
@@ -99,8 +109,23 @@ export function EditAtividadeDialog({ open, onOpenChange, atividade }: Props) {
                 onChange={(e) => setTitulo(e.target.value)}
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-data">Data de Entrega</Label>
+                <Label>Tipo</Label>
+                <Select value={tipo} onValueChange={setTipo}>
+                    <SelectTrigger>
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Prova">Prova</SelectItem>
+                        <SelectItem value="Trabalho">Trabalho</SelectItem>
+                        <SelectItem value="Lista">Lista</SelectItem>
+                        <SelectItem value="Seminário">Seminário</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor="edit-data">Data de Entrega</Label>
               <Input
                 id="edit-data"
                 type="date"
@@ -108,6 +133,7 @@ export function EditAtividadeDialog({ open, onOpenChange, atividade }: Props) {
                 onChange={(e) => setData(e.target.value)}
               />
             </div>
+          </div>
             <div className="grid gap-2">
               <Label htmlFor="obs">Observações (Assuntos, Capítulos...)</Label>
               <Textarea

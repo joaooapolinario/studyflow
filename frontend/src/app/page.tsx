@@ -1,3 +1,6 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -9,13 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, BookOpen, Calendar, AlertCircle } from "lucide-react";
-
+import { Plus, BookOpen, Calendar, AlertCircle, Clock, User } from "lucide-react";
 import { CreateMateriaDialog } from "@/components/create-materia-dialog";
-import Link from "next/link";
 import { calcularEstatisticas } from "@/lib/calculations";
-import { Clock } from "lucide-react"; 
 import { ScheduleDialog } from "@/components/schedule-diaog";
+import { UserNav } from "@/components/user-nav";
 
 interface Materia {
   id: string
@@ -36,7 +37,7 @@ interface Materia {
   notas: {
     id: string
     nome: string
-    valor: number
+    valor: number | null
     notaMaxima: number
   }[]
   
@@ -46,39 +47,54 @@ interface Materia {
   }[]
 }
 
-async function getMaterias() {
+interface Periodo {
+  id: string;
+  codigo: string;
+  semestre: number;
+}
+async function getMaterias(token: string) {
   try {
-    
-    const res = await fetch("http://localhost:3333/materias", {
-      cache: "no-store", // Garante que sempre pegue dados frescos, não cache
+    const res = await fetch("http://localhost:3333/periodos", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
     });
 
-    if (!res.ok) {
-      throw new Error("Falha ao buscar matérias");
-    }
+    if (!res.ok) throw new Error("Falha ao buscar");
 
-    return res.json();
+    const periodos = await res.json();
+    return periodos.length > 0 ? periodos[0].materias : [];
   } catch (error) {
     console.error(error);
     return [];
   }
 }
-async function getPeriodoAtual() {
+async function getPeriodoAtual(token: string) {
   try {
     const res = await fetch("http://localhost:3333/periodos", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       cache: "no-store",
     });
     const periodos = await res.json();
-    return periodos[0] || null; // Pega o primeiro ou null
+    return periodos[0] || null;
   } catch (err) {
     return null;
   }
 }
 
 export default async function Home() {
-  // Busca os dados reais antes de renderizar a página
-  const materias: Materia[] = await getMaterias();
-  const periodoAtual = await getPeriodoAtual();
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    redirect("/login");
+  }
+
+  const materias: Materia[] = await getMaterias(token);
+  const periodoAtual: Periodo | null = await getPeriodoAtual(token);
 
   return (
     <main className="min-h-screen bg-background p-4 md:p-8 space-y-8">
@@ -95,24 +111,25 @@ export default async function Home() {
           </p>
         </div>
 
-        <ScheduleDialog materias={materias} />
-
-
+        
+        <div className="flex items-center gap-3"> 
+          <ScheduleDialog materias={materias} />
+          <UserNav />
+        </div>
       </header>
 
-      {/* Se não tiver matérias, mostra um aviso amigável */}
+    
       {materias.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 border rounded-lg border-dashed text-muted-foreground">
           <AlertCircle className="h-10 w-10 mb-2" />
           <p>Nenhuma matéria encontrada.</p>
           <p className="text-sm">
-            Verifique se o Backend está rodando na porta 3333.
+            Cadastre um período e matérias para começar.
           </p>
         </div>
       ) : (
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {materias.map((materia) => {
-            // AQUI ESTÁ A MÁGICA: Calculamos antes de renderizar
             const stats = calcularEstatisticas(
               materia.notas || [],
               materia.atividades || [],
@@ -186,7 +203,6 @@ export default async function Home() {
       {periodoAtual && (
                   <div className="fixed bottom-6 right-6 z-50">
                     {" "}
-                    {/* z-50 garante que fique sobre tudo */}
                     <CreateMateriaDialog
                       periodoId={periodoAtual.id}
                       className="h-14 w-14 rounded-full shadow-2xl bg-primary hover:bg-primary/90 p-0 [&_.button-text]:hidden"

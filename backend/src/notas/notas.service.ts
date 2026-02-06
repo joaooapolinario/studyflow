@@ -1,41 +1,51 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { CreateNotaDto } from './dto/create-nota.dto';
 import { UpdateNotaDto } from './dto/update-nota.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class NotasService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-  async create(createNotaDto: CreateNotaDto) {
+  async create(createNotaDto: CreateNotaDto, userId: string) {
+    const materia = await this.prisma.materia.findUnique({
+      where: { id: createNotaDto.materiaId },
+      include: { periodo: true },
+    });
+
+    if (!materia || materia.periodo.userId !== userId) {
+      throw new UnauthorizedException('Acesso negado a esta matéria.');
+    }
+
     return await this.prisma.nota.create({
       data: createNotaDto,
     });
   }
 
-  async findAllByMateria(materiaId: string) {
-    return await this.prisma.nota.findMany({
-      where: { materiaId }
+  private async verificarPosse(id: string, userId: string) {
+    const nota = await this.prisma.nota.findUnique({
+      where: { id },
+      include: { materia: { include: { periodo: true } } },
     });
+    
+    if (!nota || nota.materia.periodo.userId !== userId) {
+      throw new NotFoundException('Nota não encontrada.');
+    }
+    return nota;
   }
 
-
-  findAll() {
-    return `This action returns all notas`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} nota`;
-  }
-
-  async update(id: string, updateNotaDto: UpdateNotaDto) {
+  async update(id: string, updateNotaDto: UpdateNotaDto, userId: string) {
+    await this.verificarPosse(id, userId);
     return await this.prisma.nota.update({
       where: { id },
-      data: updateNotaDto
+      data: updateNotaDto,
     });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} nota`;
+  async remove(id: string, userId: string) {
+    await this.verificarPosse(id, userId);
+    return await this.prisma.nota.delete({
+      where: { id },
+    });
   }
 }
