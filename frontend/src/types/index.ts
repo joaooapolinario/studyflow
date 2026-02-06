@@ -7,7 +7,7 @@ export interface Nota {
   id: string;
   nome: string;
   valor: number;
-  notaMaxima: number; // <--- Corrigido: O Backend manda 'valorMaximo', não 'notaMaxima'
+  notaMaxima: number; // <--- Corrigido: O Backend manda 'notaMaxima', não 'notaMaxima'
 }
 
 export interface Atividade {

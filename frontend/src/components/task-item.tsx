@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
-// Ícones
 import {
   Calendar,
   Loader2,
@@ -12,7 +12,6 @@ import {
   Trash2,
 } from "lucide-react";
 
-// Componentes de UI (Shadcn)
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// O Modal de Edição (Certifique-se que o arquivo edit-atividade-dialog.tsx existe na mesma pasta)
 import { EditAtividadeDialog } from "./edit-atividade-dialog";
 
 interface TaskProps {
@@ -30,7 +28,8 @@ interface TaskProps {
   titulo: string;
   concluido: boolean;
   dataEntrega: string | null;
-  observacao: string | null;
+  observacao: string | null; 
+  tipo: string;
 }
 
 export function TaskItem({
@@ -39,45 +38,54 @@ export function TaskItem({
   concluido,
   dataEntrega,
   observacao,
+  tipo,
 }: TaskProps) {
   const router = useRouter();
 
-  // Estados Locais
   const [isDone, setIsDone] = useState(concluido);
   const [isLoading, setIsLoading] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false); // Controla se o modal de edição está aberto
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
-  // Função para marcar/desmarcar (Checkbox)
   async function handleToggle(checked: boolean) {
-    setIsDone(checked); // Atualiza visualmente na hora
+    setIsDone(checked); 
     setIsLoading(true);
 
+    const token = Cookies.get("token");
+    if (!token) return;
+
     try {
-      // O 'checked' do Radix UI pode vir como 'indeterminate', forçamos boolean
       const statusFinal = checked === true;
 
       await fetch(`http://localhost:3333/atividades/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+        },
         body: JSON.stringify({ concluido: statusFinal }),
       });
 
       router.refresh();
     } catch (error) {
       console.error("Erro ao atualizar checkbox", error);
-      setIsDone(!checked); // Reverte em caso de erro
+      setIsDone(!checked);
     } finally {
       setIsLoading(false);
     }
   }
 
-  // Função para Deletar a tarefa
   async function handleDelete() {
     if (!confirm("Tem certeza que deseja apagar esta tarefa?")) return;
+
+    const token = Cookies.get("token");
+    if (!token) return;
 
     try {
       await fetch(`http://localhost:3333/atividades/${id}`, {
         method: "DELETE",
+        headers: {
+            "Authorization": `Bearer ${token}`
+        },
       });
       router.refresh();
     } catch (error) {
@@ -86,17 +94,17 @@ export function TaskItem({
     }
   }
 
-  // Cálculos de Data para exibição
   const dataFormatada = dataEntrega
     ? new Date(dataEntrega).toLocaleDateString("pt-BR")
     : null;
+    
   const isAtrasado =
     !isDone && dataEntrega && new Date(dataEntrega) < new Date();
 
   return (
     <>
       <div className="flex items-center justify-between p-4 gap-3 hover:bg-accent/30 transition-colors rounded-lg border border-transparent hover:border-border">
-        {/* LADO ESQUERDO: Checkbox e Textos */}
+        {/* LADO ESQUERDO */}
         <div className="flex items-center gap-3 flex-1 overflow-hidden">
           <div className="relative flex items-center justify-center w-5 h-5">
             {isLoading ? (
@@ -104,7 +112,6 @@ export function TaskItem({
             ) : (
               <Checkbox
                 checked={isDone}
-                // O onCheckedChange do Shadcn retorna boolean | 'indeterminate'
                 onCheckedChange={(checked) => handleToggle(checked === true)}
                 className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
               />
@@ -118,7 +125,7 @@ export function TaskItem({
               {titulo}
             </p>
 
-            {/* Se tiver observação, mostra em itálico pequeno */}
+            {/* Mudamos aqui de observacao para descricao */}
             {observacao && (
               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                 📝 {observacao}
@@ -137,7 +144,7 @@ export function TaskItem({
           </div>
         </div>
 
-        {/* LADO DIREITO: Menu Dropdown */}
+        {/* LADO DIREITO: Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -163,11 +170,11 @@ export function TaskItem({
         </DropdownMenu>
       </div>
 
-      {/* MODAL DE EDIÇÃO (Renderizado fora do layout do card, mas controlado por estado) */}
+      {/* MODAL DE EDIÇÃO */}
       <EditAtividadeDialog
         open={isEditOpen}
         onOpenChange={setIsEditOpen}
-        atividade={{ id, titulo, dataEntrega, observacao }}
+        atividade={{ id, titulo, dataEntrega, observacao, tipo }}
       />
     </>
   );

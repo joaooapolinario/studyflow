@@ -1,4 +1,14 @@
+import { IsNotEmpty, IsString, IsInt, IsOptional } from 'class-validator';
+
 export class CreatePeriodoDto {
-    codigo: string;  // "2026.1"
-    semestre: number;  // 2
+  @IsNotEmpty()
+  @IsString()
+  codigo: string; 
+
+  @IsNotEmpty()
+  @IsInt()
+  semestre: number; 
+
+  @IsOptional()
+  userId?: string; 
 }

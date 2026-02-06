@@ -1,48 +1,51 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { CreateAtividadeDto } from './dto/create-atividade.dto';
 import { UpdateAtividadeDto } from './dto/update-atividade.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AtividadesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-  async create(createAtividadeDto: CreateAtividadeDto) {
+  async create(createAtividadeDto: CreateAtividadeDto, userId: string) {
+    const materia = await this.prisma.materia.findUnique({
+      where: { id: createAtividadeDto.materiaId },
+      include: { periodo: true },
+    });
+
+    if (!materia || materia.periodo.userId !== userId) {
+      throw new UnauthorizedException('Acesso negado a esta matéria.');
+    }
+
     return await this.prisma.atividade.create({
-      data: {
-        titulo: createAtividadeDto.titulo,
-        materiaId: createAtividadeDto.materiaId,
-        concluido: createAtividadeDto.concluido || false,
-        dataEntrega: createAtividadeDto.dataEntrega,
-        observacao: createAtividadeDto.observacao,
-      },
+      data: createAtividadeDto,
     });
   }
 
-  async findAllByMateria(materiaId: string) {
-    return await this.prisma.atividade.findMany({
-      where: { materiaId },
-      orderBy: { dataEntrega: 'asc' }
+  private async verificarPosse(id: string, userId: string) {
+    const atividade = await this.prisma.atividade.findUnique({
+      where: { id },
+      include: { materia: { include: { periodo: true } } },
     });
+
+    if (!atividade || atividade.materia.periodo.userId !== userId) {
+      throw new NotFoundException('Atividade não encontrada ou acesso negado.');
+    }
+    return atividade;
   }
 
-
-  findAll() {
-    return `This action returns all atividades`;
-  }
-
-  findOne(id: string) {
-    return this.prisma.atividade.findUnique({ where: { id } });
-  }
-
-  async update(id: string, updateAtividadeDto: UpdateAtividadeDto) {
+  async update(id: string, updateAtividadeDto: UpdateAtividadeDto, userId: string) {
+    await this.verificarPosse(id, userId);
     return await this.prisma.atividade.update({
       where: { id },
       data: updateAtividadeDto,
     });
   }
 
-  remove(id: string) {
-    return this.prisma.atividade.delete({ where: { id } });
+  async remove(id: string, userId: string) {
+    await this.verificarPosse(id, userId);
+    return await this.prisma.atividade.delete({
+      where: { id },
+    });
   }
 }

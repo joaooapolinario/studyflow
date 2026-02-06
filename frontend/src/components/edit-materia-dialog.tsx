@@ -15,7 +15,7 @@ interface Props {
     id: string
     nome: string
     professorNome: string | null
-    professorEmail: string | null
+    professorContato: string | null
     cor: string | null
   }
 }
@@ -26,13 +26,13 @@ export function EditMateriaDialog({ open, onOpenChange, materia }: Props) {
   
   const [nome, setNome] = useState(materia.nome)
   const [prof, setProf] = useState(materia.professorNome || "")
-  const [contato, setContato] = useState(materia.professorEmail || "")
+  const [contato, setContato] = useState(materia.professorContato || "")
 
   useEffect(() => {
     if (open) {
       setNome(materia.nome)
       setProf(materia.professorNome || "")
-      setContato(materia.professorEmail || "")
+      setContato(materia.professorContato || "")
     }
   }, [open, materia])
 
@@ -46,7 +46,7 @@ export function EditMateriaDialog({ open, onOpenChange, materia }: Props) {
         body: JSON.stringify({ 
             nome, 
             professorNome: prof,
-            professorEmail: contato
+            professorContato: contato
         })
       })
       router.refresh()

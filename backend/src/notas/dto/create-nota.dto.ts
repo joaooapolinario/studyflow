@@ -1,19 +1,21 @@
-import { IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreateNotaDto {
-    @IsString()
-    @IsNotEmpty()
-    nome: string;    // "ab1"
+  @IsNotEmpty()
+  @IsString()
+  nome: string;
 
-    @IsNumber()
-    @IsOptional()
-    valor?: number;  // 8.5
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(0)
+  valor: number;
 
-    @IsNumber()
-    @IsNotEmpty()
-    notaMaxima: number;  // 10.0
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(0)
+  notaMaxima: number;
 
-    @IsString()
-    @IsNotEmpty()
-    materiaId: string;  // vinculo com a materia
+  @IsNotEmpty()
+  @IsUUID()
+  materiaId: string;
 }

@@ -6,17 +6,17 @@ import { MoreVertical, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { EditMateriaDialog } from "./edit-materia-dialog"
-import { ManageSchedulesDialog } from "./manage-schedules-dialog"
+// import { ManageSchedulesDialog } from "./manage-schedules-dialog"
 import { CalendarClock } from "lucide-react"
 
 interface Props {
   materia: {
-    id: string
-    nome: string
-    professorNome: string | null
-    professorEmail: string | null
-    cor: string | null
-    horarios: any[]
+    // horarios: any[]
+    id: string;
+    nome: string;
+    cor: string | null;
+    professorNome: string | null;
+    professorContato: string | null;
   }
 }
 
@@ -65,12 +65,12 @@ export function MateriaHeaderActions({ materia }: Props) {
 
       <EditMateriaDialog open={isEditOpen} onOpenChange={setIsEditOpen} materia={materia} />
 
-      <ManageSchedulesDialog
+      {/* <ManageSchedulesDialog
         open={isScheduleOpen}
         onOpenChange={setIsScheduleOpen}
         materiaId={materia.id}
         horarios={materia.horarios}
-      />
+      /> */}
     </>
   )
 }
