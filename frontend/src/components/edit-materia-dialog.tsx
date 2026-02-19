@@ -1,89 +1,181 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { Materia } from "@/types";
 
-interface Props {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  materia: {
-    id: string
-    nome: string
-    professorNome: string | null
-    professorContato: string | null
-    cor: string | null
-  }
+interface EditMateriaDialogProps {
+  materia: Materia;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function EditMateriaDialog({ open, onOpenChange, materia }: Props) {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  
-  const [nome, setNome] = useState(materia.nome)
-  const [prof, setProf] = useState(materia.professorNome || "")
-  const [contato, setContato] = useState(materia.professorContato || "")
+export function EditMateriaDialog({
+  materia,
+  open,
+  onOpenChange,
+}: EditMateriaDialogProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
+  const [formData, setFormData] = useState({
+    nome: "",
+    professorNome: "",
+    professorContato: "",
+    cor: "#3b82f6",
+  });
+
+  // Load materia data when dialog opens
   useEffect(() => {
-    if (open) {
-      setNome(materia.nome)
-      setProf(materia.professorNome || "")
-      setContato(materia.professorContato || "")
+    if (open && materia) {
+      setFormData({
+        nome: materia.nome || "",
+        professorNome: materia.professorNome || "",
+        professorContato: materia.professorContato || "",
+        cor: materia.cor || "#3b82f6",
+      });
     }
-  }, [open, materia])
+  }, [open, materia]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    try {
-      await fetch(`http://localhost:3333/materias/${materia.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            nome, 
-            professorNome: prof,
-            professorContato: contato
-        })
-      })
-      router.refresh()
-      onOpenChange(false)
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setLoading(false)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const token = Cookies.get("token");
+
+    if (!token) {
+      alert("Sessão expirada. Por favor, faça login novamente.");
+      router.push("/login");
+      return;
     }
-  }
+
+    try {
+      const res = await fetch(`http://localhost:3333/materias/${materia.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          nome: formData.nome,
+          professorNome: formData.professorNome || null,
+          professorContato: formData.professorContato || null,
+          cor: formData.cor,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Erro ao atualizar matéria");
+      }
+
+      toast.success("Matéria atualizada com sucesso!");
+      onOpenChange(false);
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao atualizar matéria. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <form onSubmit={handleSubmit}>
-          <DialogHeader><DialogTitle>Editar Matéria</DialogTitle></DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Nome da Matéria</Label>
-              <Input value={nome} onChange={e => setNome(e.target.value)} required />
-            </div>
-            <div className="grid gap-2">
-              <Label>Nome do Professor</Label>
-              <Input value={prof} onChange={e => setProf(e.target.value)} />
-            </div>
-            <div className="grid gap-2">
-              <Label>Contato (Email/Zap)</Label>
-              <Input value={contato} onChange={e => setContato(e.target.value)} placeholder="Ex: prof@email.com" />
+      <DialogContent className="sm:max-w-106.25">
+        <DialogHeader>
+          <DialogTitle>Editar Matéria</DialogTitle>
+          <DialogDescription>
+            Atualize as informações da disciplina.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="nome" className="text-right">
+              Nome
+            </Label>
+            <Input
+              id="nome"
+              required
+              className="col-span-3"
+              placeholder="Ex: Cálculo I"
+              value={formData.nome}
+              onChange={(e) =>
+                setFormData({ ...formData, nome: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="professor" className="text-right">
+              Professor
+            </Label>
+            <Input
+              id="professor"
+              className="col-span-3"
+              placeholder="Nome do professor"
+              value={formData.professorNome}
+              onChange={(e) =>
+                setFormData({ ...formData, professorNome: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="contato" className="text-right">
+              Contato
+            </Label>
+            <Input
+              id="contato"
+              className="col-span-3"
+              placeholder="Email ou Sala"
+              value={formData.professorContato}
+              onChange={(e) =>
+                setFormData({ ...formData, professorContato: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="cor" className="text-right">
+              Cor
+            </Label>
+            <div className="col-span-3 flex items-center gap-2">
+              <Input
+                id="cor"
+                type="color"
+                className="w-12 h-10 p-1 cursor-pointer"
+                value={formData.cor}
+                onChange={(e) =>
+                  setFormData({ ...formData, cor: e.target.value })
+                }
+              />
+              <span className="text-sm text-muted-foreground">
+                {formData.cor}
+              </span>
             </div>
           </div>
+
           <DialogFooter>
             <Button type="submit" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Salvar
+              {loading ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
