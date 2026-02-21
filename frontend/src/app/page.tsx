@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { MateriaCard } from "@/components/materia-card";
+import { CreatePeriodoDialog } from "@/components/create-periodo-dialog";
 import { Materia, Periodo } from "@/types";
 import { AlertCircle, Calendar } from "lucide-react";
 
@@ -68,12 +69,17 @@ export default async function Home() {
         </div>
 
         {materias.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 border rounded-lg border-dashed text-muted-foreground">
-            <AlertCircle className="h-10 w-10 mb-2" />
-            <p>Nenhuma matéria encontrada.</p>
-            <p className="text-sm">
-              Use o botão "+" na barra de navegação para começar.
+          <div className="flex flex-col items-center justify-center h-64 border rounded-lg border-dashed text-muted-foreground p-8 text-center">
+            <AlertCircle className="h-10 w-10 mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold text-foreground mb-1">
+              Nenhuma matéria encontrada
+            </h3>
+            <p className="max-w-sm mb-6">
+              {!periodoAtual
+                ? "Você precisa criar um Período (semestre) antes de adicionar matérias."
+                : 'Use o botão "+" na barra de navegação para começar a adicionar matérias.'}
             </p>
+            {!periodoAtual && <CreatePeriodoDialog />}
           </div>
         ) : (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
