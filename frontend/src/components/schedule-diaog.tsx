@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie"; // <--- Importante
+import Cookies from "js-cookie";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,6 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-// Tipagem (Replicando a que usamos na Home para consistência)
 interface Horario {
   id: string;
   diaSemana: number;
@@ -43,6 +42,7 @@ interface Materia {
 
 interface ScheduleDialogProps {
   materias: Materia[];
+  children?: React.ReactNode;
 }
 
 const DIAS_SEMANA = [
@@ -55,27 +55,25 @@ const DIAS_SEMANA = [
   "Sábado",
 ];
 
-export function ScheduleDialog({ materias }: ScheduleDialogProps) {
+export function ScheduleDialog({ materias, children }: ScheduleDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Estados do Formulário
   const [selectedMateria, setSelectedMateria] = useState<string>("");
-  const [diaSemana, setDiaSemana] = useState<string>("1"); // Default: Segunda
+  const [diaSemana, setDiaSemana] = useState<string>("1");
   const [inicio, setInicio] = useState("08:00");
   const [fim, setFim] = useState("10:00");
   const [sala, setSala] = useState("");
 
-  // Ação 1: Adicionar Horário
   const handleAddHorario = async () => {
     if (!selectedMateria) return;
     setLoading(true);
 
     const token = Cookies.get("token");
     if (!token) {
-        alert("Sessão expirada");
-        return;
+      alert("Sessão expirada");
+      return;
     }
 
     try {
@@ -83,7 +81,7 @@ export function ScheduleDialog({ materias }: ScheduleDialogProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`, // <--- Token
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           diaSemana: parseInt(diaSemana),
@@ -96,7 +94,6 @@ export function ScheduleDialog({ materias }: ScheduleDialogProps) {
 
       if (!res.ok) throw new Error("Erro ao criar horário");
 
-      // Limpa campos mas mantém a matéria selecionada para adicionar mais
       setSala("");
       router.refresh();
     } catch (error) {
@@ -107,10 +104,9 @@ export function ScheduleDialog({ materias }: ScheduleDialogProps) {
     }
   };
 
-  // Ação 2: Deletar Horário
   const handleDeleteHorario = async (id: string) => {
     if (!confirm("Remover este horário?")) return;
-    
+
     const token = Cookies.get("token");
     if (!token) return;
 
@@ -118,7 +114,7 @@ export function ScheduleDialog({ materias }: ScheduleDialogProps) {
       const res = await fetch(`http://localhost:3333/horarios/${id}`, {
         method: "DELETE",
         headers: {
-            "Authorization": `Bearer ${token}`, // <--- Token
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -131,14 +127,12 @@ export function ScheduleDialog({ materias }: ScheduleDialogProps) {
     }
   };
 
-  // Agrupa horários por dia para exibição
   const horariosPorDia = DIAS_SEMANA.map((dia, index) => {
     const horariosDoDia = materias.flatMap((m) =>
       m.horarios
         .filter((h) => h.diaSemana === index)
-        .map((h) => ({ ...h, materia: m }))
+        .map((h) => ({ ...h, materia: m })),
     );
-    // Ordena por horário de início
     horariosDoDia.sort((a, b) => a.inicio.localeCompare(b.inicio));
     return { dia, index, horarios: horariosDoDia };
   });
@@ -146,23 +140,32 @@ export function ScheduleDialog({ materias }: ScheduleDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Clock className="h-4 w-4" />
-        </Button>
+        {children ? (
+          children
+        ) : (
+          <Button variant="outline" size="icon">
+            <Clock className="h-4 w-4" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Quadro de Horários</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="visao_geral" className="flex-1 flex flex-col overflow-hidden">
+        <Tabs
+          defaultValue="visao_geral"
+          className="flex-1 flex flex-col overflow-hidden"
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="visao_geral">Visão Semanal</TabsTrigger>
             <TabsTrigger value="adicionar">Adicionar Horário</TabsTrigger>
           </TabsList>
 
-          {/* ABA 1: VISUALIZAR */}
-          <TabsContent value="visao_geral" className="flex-1 overflow-y-auto mt-4 pr-2">
+          <TabsContent
+            value="visao_geral"
+            className="flex-1 overflow-y-auto mt-4 pr-2"
+          >
             <div className="space-y-6">
               {horariosPorDia.map((item) => (
                 <div key={item.index} className="space-y-2">
@@ -179,22 +182,28 @@ export function ScheduleDialog({ materias }: ScheduleDialogProps) {
                         <div
                           key={h.id}
                           className="flex items-center justify-between p-3 rounded-md border bg-card text-card-foreground shadow-sm"
-                          style={{ borderLeft: `4px solid ${h.materia.cor || "#ccc"}` }}
+                          style={{
+                            borderLeft: `4px solid ${h.materia.cor || "#ccc"}`,
+                          }}
                         >
                           <div className="flex flex-col">
-                            <span className="font-bold text-sm">{h.materia.nome}</span>
+                            <span className="font-bold text-sm">
+                              {h.materia.nome}
+                            </span>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span>{h.inicio} - {h.fim}</span>
-                                {h.sala && (
-                                    <span className="flex items-center gap-1">
-                                        <MapPin className="h-3 w-3" /> {h.sala}
-                                    </span>
-                                )}
+                              <span>
+                                {h.inicio} - {h.fim}
+                              </span>
+                              {h.sala && (
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" /> {h.sala}
+                                </span>
+                              )}
                             </div>
                           </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive/90"
                             onClick={() => handleDeleteHorario(h.id)}
                           >
@@ -209,11 +218,13 @@ export function ScheduleDialog({ materias }: ScheduleDialogProps) {
             </div>
           </TabsContent>
 
-          {/* ABA 2: ADICIONAR */}
           <TabsContent value="adicionar" className="mt-4 space-y-4">
             <div className="space-y-2">
               <Label>Matéria</Label>
-              <Select onValueChange={setSelectedMateria} value={selectedMateria}>
+              <Select
+                onValueChange={setSelectedMateria}
+                value={selectedMateria}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a matéria..." />
                 </SelectTrigger>
@@ -246,35 +257,35 @@ export function ScheduleDialog({ materias }: ScheduleDialogProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Início</Label>
-                <Input 
-                    type="time" 
-                    value={inicio} 
-                    onChange={(e) => setInicio(e.target.value)} 
+                <Input
+                  type="time"
+                  value={inicio}
+                  onChange={(e) => setInicio(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Fim</Label>
-                <Input 
-                    type="time" 
-                    value={fim} 
-                    onChange={(e) => setFim(e.target.value)} 
+                <Input
+                  type="time"
+                  value={fim}
+                  onChange={(e) => setFim(e.target.value)}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label>Sala (Opcional)</Label>
-              <Input 
-                placeholder="Ex: Sala 102, Lab 3..." 
+              <Input
+                placeholder="Ex: Sala 102, Lab 3..."
                 value={sala}
                 onChange={(e) => setSala(e.target.value)}
               />
             </div>
 
-            <Button 
-                className="w-full mt-4" 
-                onClick={handleAddHorario} 
-                disabled={loading || !selectedMateria}
+            <Button
+              className="w-full mt-4"
+              onClick={handleAddHorario}
+              disabled={loading || !selectedMateria}
             >
               {loading ? "Salvando..." : "Adicionar Horário"}
             </Button>

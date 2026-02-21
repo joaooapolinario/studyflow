@@ -133,7 +133,7 @@ export function CreateMateriaDialog({ periodoId, className }: CreateMateriaDialo
             <Input
               id="contato"
               className="col-span-3"
-              placeholder="Email ou Sala"
+              placeholder="Email ou Numero"
               value={formData.professorContato}
               onChange={(e) => setFormData({ ...formData, professorContato: e.target.value })}
             />

@@ -40,48 +40,58 @@ export function MateriaCard({ materia }: MateriaCardProps) {
   return (
     <Link href={`/materia/${materia.id}`} className="block group relative">
       <Card
-        className={`border-l-4 shadow-lg hover:bg-accent/50 transition-colors cursor-pointer h-full flex flex-col`}
+        className={`border-l-4 shadow-sm hover:shadow-md hover:bg-accent/50 transition-all cursor-pointer h-full flex flex-col`}
         style={{ borderLeftColor: materia.cor || "#3b82f6" }}
       >
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-start">
-            <div className="overflow-hidden mr-2">
-              <CardTitle className="text-lg truncate">{materia.nome}</CardTitle>
-              <CardDescription className="truncate">
+        <CardHeader className="p-4 pb-2">
+          <div className="flex justify-between items-start gap-2">
+            <div className="overflow-hidden">
+              <CardTitle className="text-base font-semibold truncate leading-tight">
+                {materia.nome}
+              </CardTitle>
+              <CardDescription className="truncate text-xs mt-1">
                 {materia.professorNome || "Sem professor"}
               </CardDescription>
             </div>
 
-            <div className="flex flex-col items-end gap-2 shrink-0">
-              {/* Badge dinâmico */}
+            <div className="flex flex-col items-end shrink-0">
               {stats.temNotas ? (
-                <Badge variant="outline" className={corMedia}>
+                <Badge
+                  variant="outline"
+                  className={`${corMedia} text-xs px-1.5 py-0 h-5`}
+                >
                   {stats.mediaAtual.toFixed(1)}
                 </Badge>
               ) : (
-                <Badge variant="secondary">Novo</Badge>
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] px-1.5 py-0 h-5"
+                >
+                  Novo
+                </Badge>
               )}
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="pb-2 flex-1">
-          <div className="flex justify-between text-sm mb-2 mt-2">
-            <span className="text-muted-foreground">Tarefas</span>
-            <span className="font-bold">
+        <CardContent className="p-4 pt-2 pb-2 flex-1">
+          <div className="flex justify-between text-xs mb-1.5 items-center">
+            <span className="text-muted-foreground">Progresso</span>
+            <span className="font-medium">
               {Math.round(stats.progressoTarefas)}%
             </span>
           </div>
-          {/* Barra de progresso baseada nas tarefas concluídas */}
-          <Progress value={stats.progressoTarefas} className="h-2" />
+          <Progress value={stats.progressoTarefas} className="h-1.5" />
         </CardContent>
 
-        <CardFooter className="pt-4">
-          <div className="text-xs text-muted-foreground flex gap-1 items-center">
+        <CardFooter className="p-4 pt-2">
+          <div className="text-[10px] text-muted-foreground flex gap-1.5 items-center">
             <BookOpen className="h-3 w-3" />
-            {stats.tarefasPendentes === 0
-              ? "Tudo em dia!"
-              : `${stats.tarefasPendentes} pendências`}
+            <span>
+              {stats.tarefasPendentes === 0
+                ? "Tudo em dia"
+                : `${stats.tarefasPendentes} pendências`}
+            </span>
           </div>
         </CardFooter>
       </Card>

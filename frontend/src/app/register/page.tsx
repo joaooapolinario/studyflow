@@ -1,12 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -14,37 +13,34 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
+import { toast } from "sonner";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({ email: '', senha: '' });
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({ nome: "", email: "", senha: "" });
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3333/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("http://localhost:3333/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       if (!res.ok) {
-        throw new Error('Email ou senha incorretos');
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erro ao registrar usuário");
       }
 
-      const data = await res.json();
-      
-      Cookies.set('token', data.access_token, { expires: 7 });
-      
-      router.refresh(); 
-      router.push('/');
-      
+      toast.success("Conta criada com sucesso!");
+      router.push("/login");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -56,13 +52,28 @@ export default function LoginPage() {
     <div className="flex h-screen w-full items-center justify-center bg-background dark:bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">StudyFlow</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Crie sua conta
+          </CardTitle>
           <CardDescription className="text-center">
-            Entre com suas credenciais para acessar
+            Preencha os campos abaixo para começar
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome</Label>
+              <Input
+                id="nome"
+                type="text"
+                placeholder="Seu nome"
+                required
+                value={formData.nome}
+                onChange={(e) =>
+                  setFormData({ ...formData, nome: e.target.value })
+                }
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -71,7 +82,9 @@ export default function LoginPage() {
                 placeholder="m@exemplo.com"
                 required
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
@@ -81,7 +94,9 @@ export default function LoginPage() {
                 type="password"
                 required
                 value={formData.senha}
-                onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, senha: e.target.value })
+                }
               />
             </div>
 
@@ -92,15 +107,18 @@ export default function LoginPage() {
             )}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? "Criando conta..." : "Criar conta"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Não tem uma conta?{' '}
-            <Link href="/register" className="text-primary hover:underline font-medium">
-              Cadastre-se
+            Já tem uma conta?{" "}
+            <Link
+              href="/login"
+              className="text-primary hover:underline font-medium"
+            >
+              Entre aqui
             </Link>
           </p>
         </CardFooter>

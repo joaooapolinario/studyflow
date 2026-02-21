@@ -1,11 +1,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { CreateMateriaDialog } from "@/components/create-materia-dialog";
-import { ScheduleDialog } from "@/components/schedule-diaog";
-import { UserNav } from "@/components/user-nav";
+import { AppShell } from "@/components/layout/app-shell";
 import { MateriaCard } from "@/components/materia-card";
 import { Materia, Periodo } from "@/types";
-import { Calendar, AlertCircle } from "lucide-react";
+import { AlertCircle, Calendar } from "lucide-react";
 
 async function getMaterias(token: string) {
   try {
@@ -53,50 +51,38 @@ export default async function Home() {
   const periodoAtual: Periodo | null = await getPeriodoAtual(token);
 
   return (
-    <main className="min-h-screen bg-background p-4 md:p-8 space-y-8">
-      <header className="flex items-center justify-between pb-6 border-b border-border">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            StudyFlow
-          </h1>
-          <p className="text-muted-foreground mt-1 flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            {periodoAtual
-              ? `${periodoAtual.codigo} • ${periodoAtual.semestre}º Semestre`
-              : "Sem período ativo"}
-          </p>
+    <AppShell materias={materias} periodoId={periodoAtual?.id}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+              Minhas Matérias
+            </h2>
+            <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4" />
+              {periodoAtual
+                ? `${periodoAtual.codigo} • ${periodoAtual.semestre}º Semestre`
+                : "Sem período ativo"}
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <ScheduleDialog materias={materias} />
-          <UserNav />
-        </div>
-      </header>
-
-      {materias.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 border rounded-lg border-dashed text-muted-foreground">
-          <AlertCircle className="h-10 w-10 mb-2" />
-          <p>Nenhuma matéria encontrada.</p>
-          <p className="text-sm">
-            Cadastre um período e matérias para começar.
-          </p>
-        </div>
-      ) : (
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {materias.map((materia) => (
-            <MateriaCard key={materia.id} materia={materia} />
-          ))}
-        </section>
-      )}
-      {periodoAtual && (
-        <div className="fixed bottom-6 right-6 z-50">
-          {" "}
-          <CreateMateriaDialog
-            periodoId={periodoAtual.id}
-            className="h-14 w-14 rounded-full shadow-2xl bg-primary hover:bg-primary/90 p-0 [&_.button-text]:hidden"
-          />
-        </div>
-      )}
-    </main>
+        {materias.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 border rounded-lg border-dashed text-muted-foreground">
+            <AlertCircle className="h-10 w-10 mb-2" />
+            <p>Nenhuma matéria encontrada.</p>
+            <p className="text-sm">
+              Use o botão "+" na barra de navegação para começar.
+            </p>
+          </div>
+        ) : (
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {materias.map((materia) => (
+              <MateriaCard key={materia.id} materia={materia} />
+            ))}
+          </section>
+        )}
+      </div>
+    </AppShell>
   );
 }
