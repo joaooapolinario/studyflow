@@ -24,21 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-interface Horario {
-  id: string;
-  diaSemana: number;
-  inicio: string;
-  fim: string;
-  sala: string | null;
-}
-
-interface Materia {
-  id: string;
-  nome: string;
-  cor: string | null;
-  horarios: Horario[];
-}
+import { Materia } from "@/types";
 
 interface ScheduleDialogProps {
   materias: Materia[];
@@ -132,7 +118,7 @@ export function ScheduleDialog({ materias, children }: ScheduleDialogProps) {
 
   const horariosPorDia = DIAS_SEMANA.map((dia, index) => {
     const horariosDoDia = materias.flatMap((m) =>
-      m.horarios
+      (m.horarios || [])
         .filter((h) => h.diaSemana === index)
         .map((h) => ({ ...h, materia: m })),
     );

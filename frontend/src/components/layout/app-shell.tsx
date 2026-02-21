@@ -121,7 +121,13 @@ export function AppShell({ children, materias, periodoId }: AppShellProps) {
               if (item.action === "schedule") {
                 return (
                   <div key={index} className="px-3 py-1">
-                    <ScheduleDialog key={index} materias={materias}>
+                    <ScheduleDialog
+                      key={index}
+                      materias={materias.map((m: any) => ({
+                        ...m,
+                        horarios: m.horarios || [],
+                      }))}
+                    >
                       <Button
                         variant="ghost"
                         className="w-full justify-start gap-3"
@@ -232,7 +238,13 @@ export function AppShell({ children, materias, periodoId }: AppShellProps) {
 
           if (item.action === "schedule") {
             return (
-              <ScheduleDialog key={index} materias={materias}>
+              <ScheduleDialog
+                key={index}
+                materias={materias.map((m: any) => ({
+                  ...m,
+                  horarios: m.horarios || [],
+                }))}
+              >
                 <Button
                   variant="ghost"
                   size="icon"
