@@ -63,19 +63,22 @@ export function EditMateriaDialog({
     }
 
     try {
-      const res = await fetch(`http://localhost:3333/materias/${materia.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/materias/${materia.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            nome: formData.nome,
+            professorNome: formData.professorNome || null,
+            professorContato: formData.professorContato || null,
+            cor: formData.cor,
+          }),
         },
-        body: JSON.stringify({
-          nome: formData.nome,
-          professorNome: formData.professorNome || null,
-          professorContato: formData.professorContato || null,
-          cor: formData.cor,
-        }),
-      });
+      );
 
       if (!res.ok) {
         throw new Error("Erro ao atualizar matéria");

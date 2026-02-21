@@ -7,7 +7,7 @@ import { AlertCircle, Calendar } from "lucide-react";
 
 async function getMaterias(token: string) {
   try {
-    const res = await fetch("http://localhost:3333/periodos", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/periodos`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -26,7 +26,7 @@ async function getMaterias(token: string) {
 
 async function getPeriodoAtual(token: string) {
   try {
-    const res = await fetch("http://localhost:3333/periodos", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/periodos`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

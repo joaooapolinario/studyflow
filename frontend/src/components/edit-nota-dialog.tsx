@@ -41,7 +41,7 @@ export function EditNotaDialog({ open, onOpenChange, nota }: Props) {
     setLoading(true);
 
     try {
-      await fetch(`http://localhost:3333/notas/${nota.id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notas/${nota.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

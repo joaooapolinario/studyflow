@@ -28,7 +28,7 @@ interface TaskProps {
   titulo: string;
   concluido: boolean;
   dataEntrega: string | null;
-  observacao: string | null; 
+  observacao: string | null;
   tipo: string;
 }
 
@@ -47,7 +47,7 @@ export function TaskItem({
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   async function handleToggle(checked: boolean) {
-    setIsDone(checked); 
+    setIsDone(checked);
     setIsLoading(true);
 
     const token = Cookies.get("token");
@@ -56,11 +56,11 @@ export function TaskItem({
     try {
       const statusFinal = checked === true;
 
-      await fetch(`http://localhost:3333/atividades/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/atividades/${id}`, {
         method: "PATCH",
-        headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ concluido: statusFinal }),
       });
@@ -81,10 +81,10 @@ export function TaskItem({
     if (!token) return;
 
     try {
-      await fetch(`http://localhost:3333/atividades/${id}`, {
+      await fetch(`process.env.NEXT_PUBLIC_API_URL/atividades/${id}`, {
         method: "DELETE",
         headers: {
-            "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
       });
       router.refresh();
@@ -97,7 +97,7 @@ export function TaskItem({
   const dataFormatada = dataEntrega
     ? new Date(dataEntrega).toLocaleDateString("pt-BR")
     : null;
-    
+
   const isAtrasado =
     !isDone && dataEntrega && new Date(dataEntrega) < new Date();
 

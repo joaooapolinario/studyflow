@@ -77,7 +77,7 @@ export function ScheduleDialog({ materias, children }: ScheduleDialogProps) {
     }
 
     try {
-      const res = await fetch("http://localhost:3333/horarios", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/horarios`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -111,12 +111,15 @@ export function ScheduleDialog({ materias, children }: ScheduleDialogProps) {
     if (!token) return;
 
     try {
-      const res = await fetch(`http://localhost:3333/horarios/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `process.env.NEXT_PUBLIC_API_URL/horarios/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (!res.ok) throw new Error("Erro ao deletar");
 

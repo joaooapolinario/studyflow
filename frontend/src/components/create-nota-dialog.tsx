@@ -35,7 +35,7 @@ export function CreateNotaDialog({ materiaId }: { materiaId: string }) {
       const valorFloat = parseFloat(valor) || 0;
       const maxFloat = parseFloat(notaMaxima) || 10;
 
-      const res = await fetch("http://localhost:3333/notas", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notas`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,8 +43,8 @@ export function CreateNotaDialog({ materiaId }: { materiaId: string }) {
         },
         body: JSON.stringify({
           nome,
-          valor: valorFloat, 
-          notaMaxima: maxFloat, 
+          valor: valorFloat,
+          notaMaxima: maxFloat,
           materiaId,
         }),
       });

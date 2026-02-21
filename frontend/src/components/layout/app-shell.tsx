@@ -35,7 +35,7 @@ export function AppShell({ children, materias, periodoId }: AppShellProps) {
   useEffect(() => {
     const token = Cookies.get("token");
     if (token) {
-      fetch("http://localhost:3333/auth/profile", {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

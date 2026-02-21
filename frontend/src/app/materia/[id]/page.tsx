@@ -5,7 +5,15 @@ import { redirect, notFound } from "next/navigation";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Mail, User, Calendar, CheckCircle2, Circle, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  User,
+  Calendar,
+  CheckCircle2,
+  Circle,
+  Trash2,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +49,7 @@ interface Materia {
 
 async function getMateria(id: string, token: string) {
   try {
-    const res = await fetch(`http://localhost:3333/materias/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/materias/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
@@ -56,9 +64,13 @@ async function getMateria(id: string, token: string) {
   }
 }
 
-export default async function MateriaPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MateriaPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
-  
+
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -167,7 +179,7 @@ export default async function MateriaPage({ params }: { params: Promise<{ id: st
                 )}
               </CardContent>
             </Card>
-            
+
             <Card className="bg-muted/50 border-dashed flex flex-col justify-center">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base text-center">

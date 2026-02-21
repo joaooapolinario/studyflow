@@ -15,7 +15,13 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Props {
   open: boolean;
@@ -33,9 +39,8 @@ export function EditAtividadeDialog({ open, onOpenChange, atividade }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
- 
   const [titulo, setTitulo] = useState(atividade.titulo);
-  
+
   const [data, setData] = useState(
     atividade.dataEntrega
       ? new Date(atividade.dataEntrega).toISOString().split("T")[0]
@@ -60,24 +65,29 @@ export function EditAtividadeDialog({ open, onOpenChange, atividade }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    
-    const token = Cookies.get('token');
+
+    const token = Cookies.get("token");
     if (!token) return;
 
     try {
-      await fetch(`http://localhost:3333/atividades/${atividade.id}`, {
-        method: "PATCH",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/atividades/${atividade.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            titulo,
+            dataEntrega: data
+              ? new Date(data + "T00:00:00").toISOString()
+              : null,
+            observacao: obs,
+            tipo,
+          }),
         },
-        body: JSON.stringify({
-          titulo,
-          dataEntrega: data ? new Date(data + "T00:00:00").toISOString() : null,
-          observacao: obs,
-          tipo
-        }),
-      });
+      );
 
       router.refresh();
       onOpenChange(false);
@@ -98,7 +108,6 @@ export function EditAtividadeDialog({ open, onOpenChange, atividade }: Props) {
             <DialogDescription>
               Faça as alterações necessárias na tarefa abaixo.
             </DialogDescription>
-            
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -110,30 +119,30 @@ export function EditAtividadeDialog({ open, onOpenChange, atividade }: Props) {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
+              <div className="grid gap-2">
                 <Label>Tipo</Label>
                 <Select value={tipo} onValueChange={setTipo}>
-                    <SelectTrigger>
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Prova">Prova</SelectItem>
-                        <SelectItem value="Trabalho">Trabalho</SelectItem>
-                        <SelectItem value="Lista">Lista</SelectItem>
-                        <SelectItem value="Seminário">Seminário</SelectItem>
-                    </SelectContent>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Prova">Prova</SelectItem>
+                    <SelectItem value="Trabalho">Trabalho</SelectItem>
+                    <SelectItem value="Lista">Lista</SelectItem>
+                    <SelectItem value="Seminário">Seminário</SelectItem>
+                  </SelectContent>
                 </Select>
-            </div>
-            <div className="grid gap-2">
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="edit-data">Data de Entrega</Label>
-              <Input
-                id="edit-data"
-                type="date"
-                value={data}
-                onChange={(e) => setData(e.target.value)}
-              />
+                <Input
+                  id="edit-data"
+                  type="date"
+                  value={data}
+                  onChange={(e) => setData(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
             <div className="grid gap-2">
               <Label htmlFor="obs">Observações (Assuntos, Capítulos...)</Label>
               <Textarea

@@ -31,7 +31,7 @@ export function MateriaHeaderActions({ materia }: Props) {
       return;
 
     try {
-      await fetch(`http://localhost:3333/materias/${materia.id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/materias/${materia.id}`, {
         method: "DELETE",
       });
       router.push("/"); // Redireciona para a Home
@@ -58,7 +58,7 @@ export function MateriaHeaderActions({ materia }: Props) {
             onClick={handleDelete}
             className="text-red-600 focus:text-red-600"
           >
-            <Trash2 className="mr-2 h-4 w-4" /> Apagar Matéria 
+            <Trash2 className="mr-2 h-4 w-4" /> Apagar Matéria
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
