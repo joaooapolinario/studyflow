@@ -7,7 +7,7 @@ export interface Nota {
   id: string;
   nome: string;
   valor: number;
-  notaMaxima: number; // <--- Corrigido: O Backend manda 'notaMaxima', não 'notaMaxima'
+  notaMaxima: number;
 }
 
 export interface Atividade {
@@ -33,8 +33,7 @@ export interface Materia {
   professorNome: string | null;
   professorContato: string | null;
 
-  // Adicionando as listas que o Backend agora envia:
   notas: Nota[];
   atividades: Atividade[];
-  horarios: Horario[];
+  horarios?: Horario[];
 }
