@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { api } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,24 +29,18 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) {
-        throw new Error("Email ou senha incorretos");
-      }
-
-      const data = await res.json();
+      const { data } = await api.post("/auth/login", formData);
 
       Cookies.set("token", data.access_token, { expires: 7 });
 
       router.refresh();
       router.push("/");
     } catch (err: any) {
-      setError(err.message);
+      setError(
+        err.response?.status === 401
+          ? "Email ou senha incorretos"
+          : err.response?.data?.message || err.message,
+      );
     } finally {
       setLoading(false);
     }

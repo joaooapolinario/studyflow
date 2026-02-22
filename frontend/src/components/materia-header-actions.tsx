@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EditMateriaDialog } from "./edit-materia-dialog";
 import { Materia } from "@/types";
+import { api } from "@/lib/api";
 
 interface Props {
   materia: Materia;
@@ -31,9 +32,7 @@ export function MateriaHeaderActions({ materia }: Props) {
       return;
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/materias/${materia.id}`, {
-        method: "DELETE",
-      });
+      await api.delete(`/materias/${materia.id}`);
       router.push("/"); // Redireciona para a Home
       router.refresh();
     } catch (error) {

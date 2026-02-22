@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -54,35 +54,13 @@ export function EditMateriaDialog({
     e.preventDefault();
     setLoading(true);
 
-    const token = Cookies.get("token");
-
-    if (!token) {
-      alert("Sessão expirada. Por favor, faça login novamente.");
-      router.push("/login");
-      return;
-    }
-
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/materias/${materia.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            nome: formData.nome,
-            professorNome: formData.professorNome || null,
-            professorContato: formData.professorContato || null,
-            cor: formData.cor,
-          }),
-        },
-      );
-
-      if (!res.ok) {
-        throw new Error("Erro ao atualizar matéria");
-      }
+      await api.patch(`/materias/${materia.id}`, {
+        nome: formData.nome,
+        professorNome: formData.professorNome || null,
+        professorContato: formData.professorContato || null,
+        cor: formData.cor,
+      });
 
       toast.success("Matéria atualizada com sucesso!");
       onOpenChange(false);

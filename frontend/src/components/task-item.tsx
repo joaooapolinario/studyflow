@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import { api } from "@/lib/api";
 
 import {
   Calendar,
@@ -50,20 +50,10 @@ export function TaskItem({
     setIsDone(checked);
     setIsLoading(true);
 
-    const token = Cookies.get("token");
-    if (!token) return;
-
     try {
       const statusFinal = checked === true;
 
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/atividades/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ concluido: statusFinal }),
-      });
+      await api.patch(`/atividades/${id}`, { concluido: statusFinal });
 
       router.refresh();
     } catch (error) {
@@ -77,16 +67,8 @@ export function TaskItem({
   async function handleDelete() {
     if (!confirm("Tem certeza que deseja apagar esta tarefa?")) return;
 
-    const token = Cookies.get("token");
-    if (!token) return;
-
     try {
-      await fetch(`process.env.NEXT_PUBLIC_API_URL/atividades/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.delete(`/atividades/${id}`);
       router.refresh();
     } catch (error) {
       console.error("Erro ao deletar", error);

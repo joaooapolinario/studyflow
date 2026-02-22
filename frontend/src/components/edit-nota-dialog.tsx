@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 interface Props {
   open: boolean;
@@ -41,14 +42,10 @@ export function EditNotaDialog({ open, onOpenChange, nota }: Props) {
     setLoading(true);
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notas/${nota.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome,
-          valor: valor === "" ? null : parseFloat(valor.replace(",", ".")),
-          notaMaxima: parseFloat(max),
-        }),
+      await api.patch(`/notas/${nota.id}`, {
+        nome,
+        valor: valor === "" ? null : parseFloat(valor.replace(",", ".")),
+        notaMaxima: parseFloat(max),
       });
 
       router.refresh();

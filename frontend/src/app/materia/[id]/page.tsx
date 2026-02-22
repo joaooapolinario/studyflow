@@ -24,6 +24,7 @@ import { TaskItem } from "@/components/task-item";
 import { NotaItem } from "@/components/nota-item";
 import { calcularEstatisticas } from "@/lib/calculations";
 import { MateriaHeaderActions } from "@/components/materia-header-actions";
+import { api } from "@/lib/api";
 
 interface Materia {
   id: string;
@@ -49,15 +50,11 @@ interface Materia {
 
 async function getMateria(id: string, token: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/materias/${id}`, {
+    const { data } = await api.get(`/materias/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
     });
 
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error("Erro ao buscar matéria");
-
-    return (await res.json()) as Materia;
+    return data as Materia;
   } catch (error) {
     console.error(error);
     return null;

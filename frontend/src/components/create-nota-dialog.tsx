@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,28 +28,16 @@ export function CreateNotaDialog({ materiaId }: { materiaId: string }) {
     e.preventDefault();
     setLoading(true);
 
-    const token = Cookies.get("token");
-    if (!token) return;
-
     try {
       const valorFloat = parseFloat(valor) || 0;
       const maxFloat = parseFloat(notaMaxima) || 10;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notas`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          nome,
-          valor: valorFloat,
-          notaMaxima: maxFloat,
-          materiaId,
-        }),
+      await api.post("/notas", {
+        nome,
+        valor: valorFloat,
+        notaMaxima: maxFloat,
+        materiaId,
       });
-
-      if (!res.ok) throw new Error("Erro ao salvar");
 
       setOpen(false);
       setNome("");

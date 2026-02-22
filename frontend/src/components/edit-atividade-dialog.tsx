@@ -1,6 +1,6 @@
 "use client";
-import Cookies from "js-cookie";
 import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -66,28 +66,13 @@ export function EditAtividadeDialog({ open, onOpenChange, atividade }: Props) {
     e.preventDefault();
     setLoading(true);
 
-    const token = Cookies.get("token");
-    if (!token) return;
-
     try {
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/atividades/${atividade.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            titulo,
-            dataEntrega: data
-              ? new Date(data + "T00:00:00").toISOString()
-              : null,
-            observacao: obs,
-            tipo,
-          }),
-        },
-      );
+      await api.patch(`/atividades/${atividade.id}`, {
+        titulo,
+        dataEntrega: data ? new Date(data + "T00:00:00").toISOString() : null,
+        observacao: obs,
+        tipo,
+      });
 
       router.refresh();
       onOpenChange(false);

@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EditNotaDialog } from "./edit-nota-dialog";
+import { api } from "@/lib/api";
 
 interface NotaProps {
   id: string;
@@ -28,9 +29,7 @@ export function NotaItem({ id, nome, valor, notaMaxima }: NotaProps) {
     if (!confirm(`Tem certeza que deseja apagar a nota "${nome}"?`)) return;
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notas/${id}`, {
-        method: "DELETE",
-      });
+      await api.delete(`/notas/${id}`);
       router.refresh();
     } catch (error) {
       console.error("Erro ao deletar", error);

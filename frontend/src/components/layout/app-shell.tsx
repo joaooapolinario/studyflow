@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScheduleDialog } from "@/components/schedule-diaog";
 import { CreateMateriaDialog } from "@/components/create-materia-dialog";
 import { Materia } from "@/types";
+import { api } from "@/lib/api";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -35,16 +36,9 @@ export function AppShell({ children, materias, periodoId }: AppShellProps) {
   useEffect(() => {
     const token = Cookies.get("token");
     if (token) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((res) => {
-          if (res.ok) return res.json();
-          throw new Error("Falha ao buscar perfil");
-        })
-        .then((data) => {
+      api
+        .get("/auth/profile")
+        .then(({ data }) => {
           if (data && data.nome) {
             const firstName = data.nome.split(" ")[0];
             const secondName = data.nome.split(" ")[1];

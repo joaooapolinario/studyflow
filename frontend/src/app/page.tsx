@@ -5,19 +5,16 @@ import { MateriaCard } from "@/components/materia-card";
 import { CreatePeriodoDialog } from "@/components/create-periodo-dialog";
 import { Materia, Periodo } from "@/types";
 import { AlertCircle, Calendar } from "lucide-react";
+import { api } from "@/lib/api";
 
 async function getMaterias(token: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/periodos`, {
+    const { data: periodos } = await api.get("/periodos", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      cache: "no-store",
     });
 
-    if (!res.ok) throw new Error("Falha ao buscar");
-
-    const periodos = await res.json();
     return periodos.length > 0 ? periodos[0].materias : [];
   } catch (error) {
     console.error(error);
@@ -27,13 +24,11 @@ async function getMaterias(token: string) {
 
 async function getPeriodoAtual(token: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/periodos`, {
+    const { data: periodos } = await api.get("/periodos", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      cache: "no-store",
     });
-    const periodos = await res.json();
     return periodos[0] || null;
   } catch {
     return null;

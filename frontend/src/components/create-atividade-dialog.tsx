@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
-import Cookies from "js-cookie";
+import { api } from "@/lib/api";
 import {
   Select,
   SelectContent,
@@ -44,9 +44,6 @@ export function CreateAtividadeDialog({ materiaId }: Props) {
     e.preventDefault();
     setLoading(true);
 
-    const token = Cookies.get("token");
-    if (!token) return;
-
     try {
       // Prepara o JSON. Se tiver data, formata para ISO.
       const payload = {
@@ -57,16 +54,7 @@ export function CreateAtividadeDialog({ materiaId }: Props) {
         tipo,
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/atividades`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Erro ao salvar");
+      await api.post("/atividades", payload);
       setOpen(false);
       setTitulo("");
       setData("");

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import { api } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -56,29 +56,14 @@ export function ScheduleDialog({ materias, children }: ScheduleDialogProps) {
     if (!selectedMateria) return;
     setLoading(true);
 
-    const token = Cookies.get("token");
-    if (!token) {
-      alert("Sessão expirada");
-      return;
-    }
-
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/horarios`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          diaSemana: parseInt(diaSemana),
-          inicio,
-          fim,
-          sala,
-          materiaId: selectedMateria,
-        }),
+      await api.post("/horarios", {
+        diaSemana: parseInt(diaSemana),
+        inicio,
+        fim,
+        sala,
+        materiaId: selectedMateria,
       });
-
-      if (!res.ok) throw new Error("Erro ao criar horário");
 
       setSala("");
       router.refresh();
@@ -93,21 +78,8 @@ export function ScheduleDialog({ materias, children }: ScheduleDialogProps) {
   const handleDeleteHorario = async (id: string) => {
     if (!confirm("Remover este horário?")) return;
 
-    const token = Cookies.get("token");
-    if (!token) return;
-
     try {
-      const res = await fetch(
-        `process.env.NEXT_PUBLIC_API_URL/horarios/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!res.ok) throw new Error("Erro ao deletar");
+      await api.delete(`/horarios/${id}`);
 
       router.refresh();
     } catch (error) {
