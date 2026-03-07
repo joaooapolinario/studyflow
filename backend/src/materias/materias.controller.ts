@@ -4,7 +4,7 @@ import { CreateMateriaDto } from './dto/create-materia.dto';
 import { UpdateMateriaDto } from './dto/update-materia.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-@UseGuards(JwtAuthGuard) // Protege TODAS as rotas
+@UseGuards(JwtAuthGuard)
 @Controller('materias')
 export class MateriasController {
   constructor(private readonly materiasService: MateriasService) {}

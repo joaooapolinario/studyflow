@@ -11,8 +11,22 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Clock, Plus, Trash2, MapPin } from "lucide-react";
+import {
+  Clock,
+  Plus,
+  Trash2,
+  MapPin,
+  MoreVertical,
+  Pencil,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { EditHorarioDialog } from "./edit-horario-dialog";
 import {
   Select,
   SelectContent,
@@ -51,6 +65,14 @@ export function ScheduleDialog({ materias, children }: ScheduleDialogProps) {
   const [inicio, setInicio] = useState("08:00");
   const [fim, setFim] = useState("10:00");
   const [sala, setSala] = useState("");
+
+  const [editHorario, setEditHorario] = useState<any | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const openEditDialog = (horario: any) => {
+    setEditHorario(horario);
+    setIsEditDialogOpen(true);
+  };
 
   const handleAddHorario = async () => {
     if (!selectedMateria) return;
@@ -99,160 +121,185 @@ export function ScheduleDialog({ materias, children }: ScheduleDialogProps) {
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children ? (
-          children
-        ) : (
-          <Button variant="outline" size="icon">
-            <Clock className="h-4 w-4" />
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Quadro de Horários</DialogTitle>
-        </DialogHeader>
-
-        <Tabs
-          defaultValue="visao_geral"
-          className="flex-1 flex flex-col overflow-hidden"
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="visao_geral">Visão Semanal</TabsTrigger>
-            <TabsTrigger value="adicionar">Adicionar Horário</TabsTrigger>
-          </TabsList>
-
-          <TabsContent
-            value="visao_geral"
-            className="flex-1 overflow-y-auto mt-4 pr-2"
-          >
-            <div className="space-y-6">
-              {horariosPorDia.map((item) => (
-                <div key={item.index} className="space-y-2">
-                  <h3 className="font-semibold text-sm text-muted-foreground border-b pb-1">
-                    {item.dia}
-                  </h3>
-                  {item.horarios.length === 0 ? (
-                    <p className="text-xs text-muted-foreground/50 italic pl-2">
-                      Livre
-                    </p>
-                  ) : (
-                    <div className="grid gap-2">
-                      {item.horarios.map((h) => (
-                        <div
-                          key={h.id}
-                          className="flex items-center justify-between p-3 rounded-md border bg-card text-card-foreground shadow-sm"
-                          style={{
-                            borderLeft: `4px solid ${h.materia.cor || "#ccc"}`,
-                          }}
-                        >
-                          <div className="flex flex-col">
-                            <span className="font-bold text-sm">
-                              {h.materia.nome}
-                            </span>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <span>
-                                {h.inicio} - {h.fim}
-                              </span>
-                              {h.sala && (
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" /> {h.sala}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive/90"
-                            onClick={() => handleDeleteHorario(h.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="adicionar" className="mt-4 space-y-4">
-            <div className="space-y-2">
-              <Label>Matéria</Label>
-              <Select
-                onValueChange={setSelectedMateria}
-                value={selectedMateria}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a matéria..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {materias.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Dia da Semana</Label>
-              <Select onValueChange={setDiaSemana} value={diaSemana}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o dia" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DIAS_SEMANA.map((dia, index) => (
-                    <SelectItem key={index} value={String(index)}>
-                      {dia}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Início</Label>
-                <Input
-                  type="time"
-                  value={inicio}
-                  onChange={(e) => setInicio(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Fim</Label>
-                <Input
-                  type="time"
-                  value={fim}
-                  onChange={(e) => setFim(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Sala (Opcional)</Label>
-              <Input
-                placeholder="Ex: Sala 102, Lab 3..."
-                value={sala}
-                onChange={(e) => setSala(e.target.value)}
-              />
-            </div>
-
-            <Button
-              className="w-full mt-4"
-              onClick={handleAddHorario}
-              disabled={loading || !selectedMateria}
-            >
-              {loading ? "Salvando..." : "Adicionar Horário"}
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          {children ? (
+            children
+          ) : (
+            <Button variant="outline" size="icon">
+              <Clock className="h-4 w-4" />
             </Button>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+          )}
+        </DialogTrigger>
+        <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Quadro de Horários</DialogTitle>
+          </DialogHeader>
+
+          <Tabs
+            defaultValue="visao_geral"
+            className="flex-1 flex flex-col overflow-hidden"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="visao_geral">Visão Semanal</TabsTrigger>
+              <TabsTrigger value="adicionar">Adicionar Horário</TabsTrigger>
+            </TabsList>
+
+            <TabsContent
+              value="visao_geral"
+              className="flex-1 overflow-y-auto mt-4 pr-2"
+            >
+              <div className="space-y-6">
+                {horariosPorDia.map((item) => (
+                  <div key={item.index} className="space-y-2">
+                    <h3 className="font-semibold text-sm text-muted-foreground border-b pb-1">
+                      {item.dia}
+                    </h3>
+                    {item.horarios.length === 0 ? (
+                      <p className="text-xs text-muted-foreground/50 italic pl-2">
+                        Livre
+                      </p>
+                    ) : (
+                      <div className="grid gap-2">
+                        {item.horarios.map((h) => (
+                          <div
+                            key={h.id}
+                            className="flex items-center justify-between p-3 rounded-md border bg-card text-card-foreground shadow-sm"
+                            style={{
+                              borderLeft: `4px solid ${h.materia.cor || "#ccc"}`,
+                            }}
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-bold text-sm">
+                                {h.materia.nome}
+                              </span>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span>
+                                  {h.inicio} - {h.fim}
+                                </span>
+                                {h.sala && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" /> {h.sala}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => openEditDialog(h)}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" /> Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteHorario(h.id)}
+                                  className="text-red-600 focus:text-red-600 focus:bg-red-100 dark:focus:bg-red-900/50"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="adicionar" className="mt-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Matéria</Label>
+                <Select
+                  onValueChange={setSelectedMateria}
+                  value={selectedMateria}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a matéria..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {materias.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Dia da Semana</Label>
+                <Select onValueChange={setDiaSemana} value={diaSemana}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o dia" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DIAS_SEMANA.map((dia, index) => (
+                      <SelectItem key={index} value={String(index)}>
+                        {dia}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Início</Label>
+                  <Input
+                    type="time"
+                    value={inicio}
+                    onChange={(e) => setInicio(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fim</Label>
+                  <Input
+                    type="time"
+                    value={fim}
+                    onChange={(e) => setFim(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Sala (Opcional)</Label>
+                <Input
+                  placeholder="Ex: Sala 102, Lab 3..."
+                  value={sala}
+                  onChange={(e) => setSala(e.target.value)}
+                />
+              </div>
+
+              <Button
+                className="w-full mt-4"
+                onClick={handleAddHorario}
+                disabled={loading || !selectedMateria}
+              >
+                {loading ? "Salvando..." : "Adicionar Horário"}
+              </Button>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      <EditHorarioDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        horario={editHorario}
+      />
+    </>
   );
 }

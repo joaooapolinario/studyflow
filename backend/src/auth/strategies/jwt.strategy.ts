@@ -6,14 +6,13 @@ import { Injectable } from '@nestjs/common';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // Pega o token do Header "Authorization: Bearer ..."
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || "sua_chave_secreta_super_dificil_de_adivinhar_123", // Fallback caso o env falhe
+      secretOrKey: process.env.JWT_SECRET as string,
     });
   }
 
   async validate(payload: any) {
-    // Isso injeta o objeto "user" dentro da requisição (req.user)
     return { userId: payload.sub, email: payload.email };
   }
 }

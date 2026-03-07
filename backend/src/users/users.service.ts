@@ -16,8 +16,6 @@ export class UsersService {
       throw new ConflictException('Email já cadastrado.');
     }
 
-    // Criptografa a senha (Hash)
-    // O '10' é o custo do processamento (Salt rounds). Quanto maior, mais seguro e mais lento.
     const hashedPassword = await bcrypt.hash(data.senha, 10);
 
     const user = await this.prisma.user.create({
@@ -27,7 +25,6 @@ export class UsersService {
       },
     });
 
-    // Retorna o usuário SEM a senha (segurança no retorno da API)
     const { senha, ...result } = user;
     return result;
   }

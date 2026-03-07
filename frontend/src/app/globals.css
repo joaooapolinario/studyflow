@@ -32,7 +32,6 @@
 
 @layer base {
   :root {
-    /* Base variables (Dark Mode default) */
     --background: oklch(0.13 0.028 261.692);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.17 0.028 261.692);
@@ -55,7 +54,6 @@
     --radius: 0.75rem;
   }
 
-  /* Force .dark to match :root (Native Dark Mode) */
   .dark {
     --background: oklch(0.13 0.028 261.692);
     --foreground: oklch(0.985 0 0);
